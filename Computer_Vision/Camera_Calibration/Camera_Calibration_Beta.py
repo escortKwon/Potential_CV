@@ -18,7 +18,7 @@ def get_image_size_from_cap(cap:cv2.VideoCapture):
     return image_size
 
 # Set path
-path = 'Practice_CV/Camera_Calibration/Detected_Corners/Detected_Corners_'
+path = 'Potential_CV/Camera_Calibration/Detected_Corners/Detected_Corners_'
 
 # Boundary condition
 CHECKERBOARD = (6, 10) # 체커보드 행과 열당 내부 코너 수
