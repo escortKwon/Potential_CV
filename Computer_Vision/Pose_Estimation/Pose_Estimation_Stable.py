@@ -6,7 +6,7 @@ print("### Pose_Estimation.py [Stable Version] / 1.0.0 ###")
 
 # Set Environment Path
 cwd = os.getcwd()
-path_results = cwd + '/Practice_CV/Pose_Estimation/Results/'
+path_results = cwd + '/Potential_CV/Pose_Estimation/Results/'
 
 # Utility Function
 def get_image_size_from_cap(cap:cv2.VideoCapture):

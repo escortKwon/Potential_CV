@@ -4,8 +4,8 @@ import os
 
 # Set environment path
 cwd = os.getcwd()
-path_detected_corners = '/Practice_CV/Camera_Calibration/Detected_Corners/Detected_Corners_'
-path_undistortion = '/Practice_CV/Camera_Calibration/Results/'
+path_detected_corners = '/Potential_CV/Camera_Calibration/Detected_Corners/Detected_Corners_'
+path_undistortion = '/Potential_CV/Camera_Calibration/Results/'
 
 # Utility Function
 def get_image_size_from_cap(cap:cv2.VideoCapture):
