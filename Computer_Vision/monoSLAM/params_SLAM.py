@@ -39,8 +39,13 @@ fps = 60
 list_files = os.listdir(path_seq_imgs)
 MAX_FRAME = len(list_files)
 # Size of Sensor (Camera Intrinsic Parameters)
-sizeSensor = 1/1.76
-sizePixel = 1.8 * 10 ** (-6)
+# camera_type = input(">>> Enter the type of camera (Ex: S20P...): ")
+camera_type = "S20P"
+if camera_type == "S20P":
+    sizeSensor = 1/1.76
+    sizePixel = 1.8 * 10 ** (-6)
+else:
+    pass
 # End of setting parameters
 
 # Visualization

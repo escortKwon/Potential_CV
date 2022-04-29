@@ -4,11 +4,13 @@ import math
 import os
 import platform
 import operator
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # Set Environment Path
 cwd = os.getcwd()
-path_poses = cwd + '/Practice_CV/monoSLAM/odometry_ground_truth_poses/poses/'
-path_write = cwd + '/Practice_CV/monoSLAM/Results/'
+# path_poses = cwd + '/Practice_CV/monoSLAM/odometry_ground_truth_poses/poses/'
+path_write = cwd + '/Computer_Vision/monoSLAM/Results/'
 
 if platform.system() == "Darwin":
     path_imgs = '/Users/escortkwon/Kitti Dataset/dataset/sequences/' # Mac
@@ -16,6 +18,7 @@ elif platform.system() == "Windows":
     path_imgs = 'D:/Kitti Dataset/dataset/sequences/' # Windows
 elif platform.system() == "Linux":
     path_imgs = '/mnt/d/Kitti Dataset/dataset/sequences/' # Linux
+    path_poses = '/mnt/d/Kitti Dataset/odometry_ground_truth_poses/poses/'
 
 # Create ORB and BFMatcher
 orb = cv2.cv2.ORB_create(
@@ -197,3 +200,40 @@ if __name__ == "__main__":
     cv2.imwrite(path_write + 'Result_monoSLAM_{0:02d}_{1}.png'.format(SEQ_NUM, platform.system()), traj)
     t_f_extract = t_f_extract[1:]
     np.savetxt(path_write + 't_f_extract.txt', t_f_extract, fmt="%10s", delimiter=',', header='t_f_extract')
+
+# Visualize ORB coordinates as 3D-Plot
+def plotting_3D():
+    ## Designate paths and load data
+    path_data = path_write + 't_f_extract.txt'
+    data = open(path_data)
+    lines = data.readlines()
+    ## Plotting
+    x = []
+    y = []
+    z = []
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Save coordinates from each axis on the lists
+    for i in range(1, len(lines)):
+        lines_sp = lines[i].split(',')
+        x_coord = float(lines_sp[0])
+        y_coord = float(lines_sp[1])
+        z_coord = float(lines_sp[2])
+
+        x.append(x_coord)
+        y.append(y_coord)
+        z.append(z_coord)
+
+        ax.scatter(x, y, z, c='r', alpha=0.5)
+
+    ax.set_xlim3d(min(x), max(x))
+    ax.set_ylim3d(min(y), max(y))
+    ax.set_zlim3d(min(z), max(z))
+    ax.set_xlabel('$x$', fontsize=20)
+    ax.set_ylabel('$y$', fontsize=20)
+    ax.set_zlabel('$z$', fontsize=20)
+    plt.show()
+
+plotting_3D()
