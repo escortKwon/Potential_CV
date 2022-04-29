@@ -8,14 +8,30 @@ import platform
 # Set Paramters
 ## Environment Path
 cwd = os.getcwd()
-path_result = cwd + '/Practice_CV/monoSLAM/Results/'
+path_result = cwd + '/Computer_Vision/monoSLAM/Results/'
 Result_image_name = path_result + f'Result_monoSLAM_Corridor_{platform.system()}.png'
 Result_video_name = path_result + f'Result_Video_monoSLAM_Corridor_{platform.system()}.mp4'
 ## The number of Sequence
 # seq_num = input(">>> Enter the number of Sequence (Ex: 01, 02 ...) : ")
 seq_num = "03"
-path_seq_imgs = cwd + f'/Practice_CV/monoSLAM/Corridor/Frames/Sequence{seq_num}/'
-path_calib_img = cwd + '/Practice_CV/monoSLAM/Images/Checkerboard_Calibration.jpg'
+list_seq_corridor = ["01", "02", "03", "04"]
+list_seq_campus = ["05"]
+if platform.system() == "Linux":
+    if seq_num in list_seq_corridor:
+        path_seq_imgs = f'/mnt/d/Corridor/Frames/Sequence{seq_num}/'
+        path_calib_img = '/mnt/d/Corridor/Images/Checkerboard_Calibration_1.jpg'
+    elif seq_num in list_seq_campus:
+        path_seq_imgs = f'/mnt/d/Campus/Frames/Sequence{seq_num}/'
+        path_calib_img = '/mnt/d/Campus/Images/Checkerboard_Calibration_2.jpg'
+elif platform.system() == "Windows":
+    if seq_num in list_seq_corridor:
+        path_seq_imgs = f'D:/Corridor/Frames/Sequence{seq_num}'
+        path_calib_img = 'D:/Corridor/Images/Checkerboard_Calibration_1.jpg'
+    elif seq_num in list_seq_campus:
+        path_seq_imgs = f'D:/Campus/Frames/Sequence{seq_num}'
+        path_calib_img = 'D:/Corridor/Images/Checkerboard_Calibration_2.jpg'
+else: # Darwin / Undetermined
+    pass
 ## VideoWriter
 fourcc = cv2.VideoWriter_fourcc(*'X264')
 fps = 60
