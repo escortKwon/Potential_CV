@@ -28,16 +28,24 @@ principal_point = (320, 240) # in pixels (x, y)
 
 # Visualization
 ## Text
-text_title = "ORB Coordinates"
+text_title_f = "ORB Coordinates"
+text_title_gt = "Ground Truth Coordinates"
 list_text_header = ['X = ', 'Y = ', 'Z = ']
 ## Window Size of Trajectory
 trajSize = (1000, 1000)
 ## Text Position
-textOrg_title = (10, 10)
-textOrg_x = (10, 60)
-textOrg_y = (10, 110)
-textOrg_z = (10, 160)
-list_text_Org = [textOrg_x, textOrg_y, textOrg_z]
+### Features
+textOrg_title_f = (10, 10)
+textOrg_x_f = (10, 60)
+textOrg_y_f = (10, 110)
+textOrg_z_f = (10, 160)
+list_text_Org_f = [textOrg_x_f, textOrg_y_f, textOrg_z_f]
+### Ground Truths
+textOrg_title_gt = (10, 260)
+textOrg_x_gt = (10, 310)
+textOrg_y_gt = (10, 360)
+textOrg_z_gt = (10, 410)
+list_text_Org_gt = [textOrg_x_gt, textOrg_y_gt, textOrg_z_gt]
 ## Window Position
 Pos_trajectory = (2000, 500)
 ## Scale

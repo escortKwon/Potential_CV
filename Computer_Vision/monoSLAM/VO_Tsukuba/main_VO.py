@@ -4,6 +4,7 @@ import params_VO
 import core_VO
 
 if __name__ == "__main__":
+    print("Visual Odometry from Tsukuba datasets [Nightly / 0.0.1]")
     img_1_c = cv2.imread(params_VO.path_imgs_seqs + "00001.png")
     img_2_c = cv2.imread(params_VO.path_imgs_seqs + "00002.png")
     img_1 = cv2.cvtColor(img_1_c,cv2.COLOR_BGR2GRAY)
@@ -37,7 +38,8 @@ if __name__ == "__main__":
     traj = np.zeros(params_VO.trajSize, dtype=np.uint8)
     traj = cv2.cvtColor(traj, cv2.COLOR_GRAY2BGR)
 
-    t_gt = np.zeros((3,1),dtype=np.float64)
+    # t_gt = np.zeros((3,1), dtype=np.float64)
+    t_gt = [0 for i in range(3)]
     
     for numFrame in range(1, params_VO.MAX_FRAME):
         filename = params_VO.path_imgs_seqs + f'{numFrame:05d}.png'
@@ -83,17 +85,23 @@ if __name__ == "__main__":
         des_prev = des_curr
 
         # Visualization
-        x = int(t_f[0] * params_VO.featureScale + params_VO.trajSize[1]/2)
-        y = int(t_f[1] * params_VO.featureScale + params_VO.trajSize[0]/2)
+        ## Ground truth
+        x_gt = int(t_gt[0]) + 500
+        y_gt = int(t_gt[1]) + 500
+        ## Features
+        x = int(t_f[0]) + 500
+        y = int(t_f[1]) + 500
         
-        cv2.circle(traj, (x, y), 1, (0,0,255), 2)
-        cv2.rectangle(traj, (10,10), (200, 200), (0,0,0), -1)
+        cv2.circle(traj, (x, y), 1, (0,0,255), 2) # Features - Red
+        cv2.circle(traj, (x_gt, y_gt), 1, (0,255,0), 2) # Ground Truths - Green
+        cv2.rectangle(traj, (10,10), (700, 150), (0,0,0), -1)
 
-        # Create list of t_f Coordinates
-        list_text = [t_f[0][0], t_f[1][0], t_f[2][0]]
+        # Create list of Coordinates
+        list_features = [t_f[0][0], t_f[1][0], t_f[2][0]]
+        list_ground_truths = [t_gt[0], t_gt[1], t_gt[2]]
 
-        # Draw ORB Coordinates on Trajectory
-        core_VO.visualization_orb_coords(list_text, traj)
+        # Draw Coordinates on Trajectory
+        core_VO.visualization_coords(list_features, list_ground_truths, traj)
         feature_img = cv2.drawKeypoints(currImage_c, kp_curr, None)
 
         cv2.imshow("trajectory", traj)

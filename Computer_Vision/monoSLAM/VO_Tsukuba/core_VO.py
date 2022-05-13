@@ -62,16 +62,21 @@ def extract_t_f_coords(t_f):
     return params_VO.t_f_extract
 
 # Visualization Function
-def visualization_orb_coords(list_text, traj):
+def visualization_coords(list_features, list_ground_truths, traj):
     """
     This function will put texts on trajectory following below conditions
     """
     # Text Title
-    cv2.putText(traj, params_VO.text_title, params_VO.textOrg_title, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
-    for i in range(0, len(list_text)):
-        # X, Y and Z Coordinates
-        put_text = params_VO.list_text_header[i] + str(round(list_text[i], 8)) + "m"
-        cv2.putText(traj, put_text, params_VO.list_text_Org[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    cv2.putText(traj, params_VO.text_title_f, params_VO.textOrg_title_f, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    cv2.putText(traj, params_VO.text_title_gt, params_VO.textOrg_title_gt, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    # Features
+    for i in range(0, len(list_features)):
+        put_text_f = params_VO.list_text_header[i] + str(round(list_features[i], 8)) + "cm"
+        cv2.putText(traj, put_text_f, params_VO.list_text_Org_f[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    # Ground Truths
+    for i in range(0, len(list_ground_truths)):
+        put_text_gt = params_VO.list_text_header[i] + str(round(list_ground_truths[i], 8)) + "cm"
+        cv2.putText(traj, put_text_gt, params_VO.list_text_Org_gt[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
 
 # Saving Result Function
 def save_result(traj):
@@ -103,7 +108,7 @@ def calculate_total_distance():
 # Visualize ORB coordinates as 3D-Plot
 def plotting_3D():
     ## Designate paths and load data
-    path_data = params_VO.path_result + 't_f_extract_Corridor.txt'
+    path_data = params_VO.path_result + 't_f_extract_Tsukuba.txt'
     data = open(path_data)
     lines = data.readlines()
     ## Plotting
