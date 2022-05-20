@@ -23,6 +23,35 @@ orb = cv2.ORB_create(
 
 bf = cv2.BFMatcher(cv2.NORM_HAMMING)
 
+# Calculates Rotation Matrix given euler angles.
+def eulerAnglesToRotationMatrix(numFrame):
+
+    txt_file = open(params_VO.path_ground_truth)
+    line = txt_file.readlines()
+    line_sp = line[numFrame].split(',')
+    eulerAngles = [float(line_sp[3]), float(line_sp[4]), float(line_sp[5])]
+
+    R_x = np.array([[1,         0,                  0                   ],
+                    [0,         math.cos(eulerAngles[0]), -math.sin(eulerAngles[0]) ],
+                    [0,         math.sin(eulerAngles[0]), math.cos(eulerAngles[0])  ]
+                    ])
+
+    R_y = np.array([[math.cos(eulerAngles[1]),    0,      math.sin(eulerAngles[1])  ],
+                    [0,                     1,      0                   ],
+                    [-math.sin(eulerAngles[1]),   0,      math.cos(eulerAngles[1])  ]
+                    ])
+
+    R_z = np.array([[math.cos(eulerAngles[2]),    -math.sin(eulerAngles[2]),    0],
+                    [math.sin(eulerAngles[2]),    math.cos(eulerAngles[2]),     0],
+                    [0,                     0,                      1]
+                    ])
+
+    R = np.dot(R_z, np.dot( R_y, R_x ))
+
+    rmatrix, _ = cv2.Rodrigues(R)
+
+    return rmatrix
+
 # Caculating scale function
 def getScale(numFrame, t_gt):
 
