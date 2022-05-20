@@ -1,10 +1,13 @@
 import cv2
 import numpy as np
+from tqdm import tqdm
+import time
+
 import params_VO
 import core_VO
 
 if __name__ == "__main__":
-    print("Visual Odometry from Tsukuba datasets [Nightly / 0.0.1]")
+    print("Visual Odometry from Tsukuba datasets [Nightly / 0.0.2]")
     img_1_c = cv2.imread(params_VO.path_imgs_seqs + "00001.png")
     img_2_c = cv2.imread(params_VO.path_imgs_seqs + "00002.png")
     img_1 = cv2.cvtColor(img_1_c,cv2.COLOR_BGR2GRAY)
@@ -31,6 +34,12 @@ if __name__ == "__main__":
     E, mask = cv2.findEssentialMat(pts1, pts2, focal=params_VO.focal_length, pp=params_VO.principal_point, method=cv2.RANSAC, prob=0.999, threshold=1.0)
     _, R_f, t_f, _ = cv2.recoverPose(E, pts1, pts2, focal=params_VO.focal_length, pp=params_VO.principal_point)
 
+    R_f_seg = R_f
+    t_f_seg = t_f
+
+    # t_gt = np.zeros((3,1), dtype=np.float64)
+    t_gt = [0 for i in range(3)]
+
     prevImage = img_2
     kp_prev = kp2
     des_prev = des2
@@ -38,10 +47,14 @@ if __name__ == "__main__":
     traj = np.zeros(params_VO.trajSize, dtype=np.uint8)
     traj = cv2.cvtColor(traj, cv2.COLOR_GRAY2BGR)
 
-    # t_gt = np.zeros((3,1), dtype=np.float64)
-    t_gt = [0 for i in range(3)]
+    # Set variable for creating progress bar
+    pbar = tqdm(total=100)
     
     for numFrame in range(1, params_VO.MAX_FRAME):
+        # Update progress bar
+        time.sleep(0.1)
+        pbar.update(100/params_VO.MAX_FRAME)
+
         filename = params_VO.path_imgs_seqs + f'{numFrame:05d}.png'
 
         currImage_c = cv2.imread(filename)
@@ -69,6 +82,15 @@ if __name__ == "__main__":
         E_mat, mask_n = cv2.findEssentialMat(pts2, pts1, focal=params_VO.focal_length, pp=params_VO.principal_point, method=cv2.RANSAC, prob=0.999, threshold=1.0)
         _, R, t, _ = cv2.recoverPose(E_mat, pts2, pts1, focal=params_VO.focal_length, pp=params_VO.principal_point)
 
+        # Calculate Rotation Matrix
+        core_VO.eulerAnglesToRotationMatrix(numFrame)
+
+        """
+        Error: t_gt --> Translation Vector, not coordinates
+        Solution: Get 'translation vector' from ground turthes
+                    such as converting translation vector from Euler angles
+        """
+
         # get scale
         abs_scale, t_gt = core_VO.getScale(numFrame, t_gt)
 
@@ -86,11 +108,11 @@ if __name__ == "__main__":
 
         # Visualization
         ## Ground truth
-        x_gt = int(t_gt[0]) + 500
-        y_gt = int(t_gt[1]) + 500
+        x_gt = int(t_gt[0]) + 250
+        y_gt = int(t_gt[2]) + 500
         ## Features
-        x = int(t_f[0]) + 500
-        y = int(t_f[1]) + 500
+        x = int(t_f[0]) + 250
+        y = int(t_f[2]) + 500
         
         cv2.circle(traj, (x, y), 1, (0,0,255), 2) # Features - Red
         cv2.circle(traj, (x_gt, y_gt), 1, (0,255,0), 2) # Ground Truths - Green
@@ -108,6 +130,8 @@ if __name__ == "__main__":
         # cv2.moveWindow("trajectory", Pos_trajectory[0], Pos_trajectory[1])
         cv2.imshow("feat_img", feature_img)
         # cv2.moveWindow("feat_img", Pos_trajectory[0] + trajSize[0], Pos_trajectory[1])
+        
+        # core_VO.get_3d_trajectory()
         cv2.waitKey(1)
     
     # Save results
