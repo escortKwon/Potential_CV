@@ -1,5 +1,8 @@
 import cv2
 import numpy as np
+import time
+from tqdm import tqdm
+
 import params_SLAM
 import core_SLAM
 
@@ -30,14 +33,24 @@ if __name__ == "__main__":
     E, mask = cv2.findEssentialMat(pts1, pts2, focal=core_SLAM.focal, pp=core_SLAM.pp, method=cv2.RANSAC, prob=0.999, threshold=1.0)
     _, R_f, t_f, _ = cv2.recoverPose(E, pts1, pts2, focal=core_SLAM.focal, pp=core_SLAM.pp)
 
+    R_f_seg = R_f
+    t_f_seg = t_f
+
     prevImage = img_2
     kp_prev = kp2
     des_prev = des2
 
     traj = np.zeros(params_SLAM.trajSize, dtype=np.uint8)
     traj = cv2.cvtColor(traj, cv2.COLOR_GRAY2BGR)
+
+    # Set variable for creating progress bar
+    pbar = tqdm(total=100)
     
     for numFrame in range(1, params_SLAM.MAX_FRAME):
+        # Update progress bar
+        time.sleep(0.1)
+        pbar.update(100/params_SLAM.MAX_FRAME)
+
         filename = params_SLAM.path_seq_imgs + f'{numFrame:05d}.png'
 
         currImage_c = cv2.imread(filename)
