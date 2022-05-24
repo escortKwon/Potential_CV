@@ -3,20 +3,20 @@ import numpy as np
 from tqdm import tqdm
 import time
 
-import params_VO
-import core_VO
+import Computer_Vision.monoSLAM.TsukubaDatasets.params_Tsukuba as params_Tsukuba
+import Computer_Vision.monoSLAM.TsukubaDatasets.core_Tsukuba as core_Tsukuba
 
 if __name__ == "__main__":
     print("Visual Odometry from Tsukuba datasets [Nightly / 0.0.2]")
-    img_1_c = cv2.imread(params_VO.path_imgs_seqs + "00001.png")
-    img_2_c = cv2.imread(params_VO.path_imgs_seqs + "00002.png")
+    img_1_c = cv2.imread(params_Tsukuba.path_imgs_seqs + "00001.png")
+    img_2_c = cv2.imread(params_Tsukuba.path_imgs_seqs + "00002.png")
     img_1 = cv2.cvtColor(img_1_c,cv2.COLOR_BGR2GRAY)
     img_2 = cv2.cvtColor(img_2_c,cv2.COLOR_BGR2GRAY)
 
-    kp1, des1 = core_VO.orb.detectAndCompute(img_1,None)
-    kp2, des2 = core_VO.orb.detectAndCompute(img_2,None)
+    kp1, des1 = core_Tsukuba.orb.detectAndCompute(img_1,None)
+    kp2, des2 = core_Tsukuba.orb.detectAndCompute(img_2,None)
 
-    matches = core_VO.bf.match(des1,des2)
+    matches = core_Tsukuba.bf.match(des1,des2)
     matches = sorted(matches, key = lambda x:x.distance)
 
     idx = matches[0:1500]
@@ -31,8 +31,8 @@ if __name__ == "__main__":
     pts1 = np.array(pts1)
     pts2 = np.array(pts2)
 
-    E, mask = cv2.findEssentialMat(pts1, pts2, focal=params_VO.focal_length, pp=params_VO.principal_point, method=cv2.RANSAC, prob=0.999, threshold=1.0)
-    _, R_f, t_f, _ = cv2.recoverPose(E, pts1, pts2, focal=params_VO.focal_length, pp=params_VO.principal_point)
+    E, mask = cv2.findEssentialMat(pts1, pts2, focal=params_Tsukuba.focal_length, pp=params_Tsukuba.principal_point, method=cv2.RANSAC, prob=0.999, threshold=1.0)
+    _, R_f, t_f, _ = cv2.recoverPose(E, pts1, pts2, focal=params_Tsukuba.focal_length, pp=params_Tsukuba.principal_point)
 
     R_f_seg = R_f
     t_f_seg = t_f
@@ -44,27 +44,27 @@ if __name__ == "__main__":
     kp_prev = kp2
     des_prev = des2
 
-    traj = np.zeros(params_VO.trajSize, dtype=np.uint8)
+    traj = np.zeros(params_Tsukuba.trajSize, dtype=np.uint8)
     traj = cv2.cvtColor(traj, cv2.COLOR_GRAY2BGR)
 
     # Set variable for creating progress bar
     pbar = tqdm(total=100)
     
-    for numFrame in range(1, params_VO.MAX_FRAME):
+    for numFrame in range(1, params_Tsukuba.MAX_FRAME):
         # Update progress bar
         time.sleep(0.1)
-        pbar.update(100/params_VO.MAX_FRAME)
+        pbar.update(100/params_Tsukuba.MAX_FRAME)
 
-        filename = params_VO.path_imgs_seqs + f'{numFrame:05d}.png'
+        filename = params_Tsukuba.path_imgs_seqs + f'{numFrame:05d}.png'
 
         currImage_c = cv2.imread(filename)
         currImage = cv2.cvtColor(currImage_c,cv2.COLOR_BGR2GRAY)
 
         # feature extraction
-        kp_curr, des_curr = core_VO.orb.detectAndCompute(currImage,None)
+        kp_curr, des_curr = core_Tsukuba.orb.detectAndCompute(currImage,None)
 
         # feature matching
-        matches = core_VO.bf.match(des_prev,des_curr)
+        matches = core_Tsukuba.bf.match(des_prev,des_curr)
         matches = sorted(matches, key = lambda x:x.distance)
         idx = matches[0:1500]
 
@@ -79,27 +79,21 @@ if __name__ == "__main__":
         pts2 = np.array(pts2)
 
         # caculate R, t
-        E_mat, mask_n = cv2.findEssentialMat(pts2, pts1, focal=params_VO.focal_length, pp=params_VO.principal_point, method=cv2.RANSAC, prob=0.999, threshold=1.0)
-        _, R, t, _ = cv2.recoverPose(E_mat, pts2, pts1, focal=params_VO.focal_length, pp=params_VO.principal_point)
+        E_mat, mask_n = cv2.findEssentialMat(pts2, pts1, focal=params_Tsukuba.focal_length, pp=params_Tsukuba.principal_point, method=cv2.RANSAC, prob=0.999, threshold=1.0)
+        _, R, t, _ = cv2.recoverPose(E_mat, pts2, pts1, focal=params_Tsukuba.focal_length, pp=params_Tsukuba.principal_point)
 
         # Calculate Rotation Matrix
-        core_VO.eulerAnglesToRotationMatrix(numFrame)
-
-        """
-        Error: t_gt --> Translation Vector, not coordinates
-        Solution: Get 'translation vector' from ground turthes
-                    such as converting translation vector from Euler angles
-        """
+        core_Tsukuba.eulerAnglesToRotationMatrix(numFrame)
 
         # get scale
-        abs_scale, t_gt = core_VO.getScale(numFrame, t_gt)
+        scale, t_gt = core_Tsukuba.getScale(numFrame, t_gt)
 
         # Update trajectory
-        t_f = t_f +  abs_scale * R_f.dot(t)
+        t_f = t_f +  scale * R_f.dot(t)
         R_f = R.dot(R_f)
 
         # Extract t_f 
-        core_VO.extract_t_f_coords(t_f)
+        core_Tsukuba.extract_t_f_coords(t_f)
 
         # Save current data for next step
         prevImage = currImage
@@ -123,7 +117,7 @@ if __name__ == "__main__":
         list_ground_truths = [t_gt[0], t_gt[1], t_gt[2]]
 
         # Draw Coordinates on Trajectory
-        core_VO.visualization_coords(list_features, list_ground_truths, traj)
+        core_Tsukuba.visualization_coords(list_features, list_ground_truths, traj)
         feature_img = cv2.drawKeypoints(currImage_c, kp_curr, None)
 
         cv2.imshow("trajectory", traj)
@@ -135,8 +129,8 @@ if __name__ == "__main__":
         cv2.waitKey(1)
     
     # Save results
-    core_VO.save_result(traj)
+    core_Tsukuba.save_result(traj)
     # Calculate total distance of sequence
-    core_VO.calculate_total_distance()
+    core_Tsukuba.calculate_total_distance()
     # 3D coordinates plot
-    core_VO.plotting_3D()
+    core_Tsukuba.plotting_3D()

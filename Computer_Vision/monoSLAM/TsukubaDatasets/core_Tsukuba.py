@@ -4,7 +4,7 @@ from matplotlib import projections
 import numpy as np
 import cv2
 import math
-import params_VO
+import Computer_Vision.monoSLAM.TsukubaDatasets.params_Tsukuba as params_Tsukuba
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -26,7 +26,7 @@ bf = cv2.BFMatcher(cv2.NORM_HAMMING)
 # Calculates Rotation Matrix given euler angles.
 def eulerAnglesToRotationMatrix(numFrame):
 
-    txt_file = open(params_VO.path_ground_truth)
+    txt_file = open(params_Tsukuba.path_ground_truth)
     line = txt_file.readlines()
     line_sp = line[numFrame].split(',')
     eulerAngles = [float(line_sp[3]), float(line_sp[4]), float(line_sp[5])]
@@ -55,7 +55,7 @@ def eulerAnglesToRotationMatrix(numFrame):
 # Caculating scale function
 def getScale(numFrame, t_gt):
 
-    txt_file = open(params_VO.path_ground_truth)
+    txt_file = open(params_Tsukuba.path_ground_truth)
     
     x_prev = float(t_gt[0])
     y_prev = float(t_gt[1])
@@ -85,10 +85,10 @@ def extract_t_f_coords(t_f):
     It will return t_f_extract
     """
     for i in range(0, len(t_f)):
-        params_VO.t_f_new[0][i] = t_f[i][0]
-        params_VO.t_f_extract = np.append(params_VO.t_f_extract, params_VO.t_f_new, axis=0)
+        params_Tsukuba.t_f_new[0][i] = t_f[i][0]
+        params_Tsukuba.t_f_extract = np.append(params_Tsukuba.t_f_extract, params_Tsukuba.t_f_new, axis=0)
 
-    return params_VO.t_f_extract
+    return params_Tsukuba.t_f_extract
 
 # Visualization Function
 def visualization_coords(list_features, list_ground_truths, traj):
@@ -96,24 +96,24 @@ def visualization_coords(list_features, list_ground_truths, traj):
     This function will put texts on trajectory following below conditions
     """
     # Text Title
-    cv2.putText(traj, params_VO.text_title_f, params_VO.textOrg_title_f, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
-    cv2.putText(traj, params_VO.text_title_gt, params_VO.textOrg_title_gt, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    cv2.putText(traj, params_Tsukuba.text_title_f, params_Tsukuba.textOrg_title_f, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    cv2.putText(traj, params_Tsukuba.text_title_gt, params_Tsukuba.textOrg_title_gt, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
     # Features
     for i in range(0, len(list_features)):
-        put_text_f = params_VO.list_text_header[i] + str(round(list_features[i], 8)) + "cm"
-        cv2.putText(traj, put_text_f, params_VO.list_text_Org_f[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+        put_text_f = params_Tsukuba.list_text_header[i] + str(round(list_features[i], 8)) + "cm"
+        cv2.putText(traj, put_text_f, params_Tsukuba.list_text_Org_f[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
     # Ground Truths
     for i in range(0, len(list_ground_truths)):
-        put_text_gt = params_VO.list_text_header[i] + str(round(list_ground_truths[i], 8)) + "cm"
-        cv2.putText(traj, put_text_gt, params_VO.list_text_Org_gt[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+        put_text_gt = params_Tsukuba.list_text_header[i] + str(round(list_ground_truths[i], 8)) + "cm"
+        cv2.putText(traj, put_text_gt, params_Tsukuba.list_text_Org_gt[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
 
 # Saving Result Function
 def save_result(traj):
     # Save mapped image
-    cv2.imwrite(params_VO.Result_image_name, traj)
+    cv2.imwrite(params_Tsukuba.Result_image_name, traj)
     # Save ORB Coordinates for txt file
-    params_VO.t_f_extract = params_VO.t_f_extract[1:]
-    np.savetxt(params_VO.path_result + 't_f_extract_Tsukuba.txt', params_VO.t_f_extract, fmt="%10s", delimiter=',', header='t_f_extract')
+    params_Tsukuba.t_f_extract = params_Tsukuba.t_f_extract[1:]
+    np.savetxt(params_Tsukuba.path_result + 't_f_extract_Tsukuba.txt', params_Tsukuba.t_f_extract, fmt="%10s", delimiter=',', header='t_f_extract')
 
 # Calculate total distance of sequence
 def calculate_total_distance():
@@ -124,9 +124,9 @@ def calculate_total_distance():
     y_prev = 0
 
     # Calculate
-    for i in range(0, len(params_VO.t_f_extract)):
-        x = params_VO.t_f_extract[i][0]
-        y = params_VO.t_f_extract[i][1]
+    for i in range(0, len(params_Tsukuba.t_f_extract)):
+        x = params_Tsukuba.t_f_extract[i][0]
+        y = params_Tsukuba.t_f_extract[i][1]
         distance += math.sqrt((x-x_prev)**2 + (y-y_prev)**2)
         x_prev = x
         y_prev = y
@@ -137,7 +137,7 @@ def calculate_total_distance():
 # Visualize ORB coordinates as 3D-Plot
 def plotting_3D():
     ## Designate paths and load data
-    path_data = params_VO.path_result + 't_f_extract_Tsukuba.txt'
+    path_data = params_Tsukuba.path_result + 't_f_extract_Tsukuba.txt'
     data = open(path_data)
     lines = data.readlines()
     ## Plotting

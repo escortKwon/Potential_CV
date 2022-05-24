@@ -4,7 +4,7 @@ from matplotlib import projections
 import numpy as np
 import cv2
 import math
-import params_SLAM
+import Computer_Vision.monoSLAM.Corridor.params_Corridor as params_Corridor
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -20,7 +20,7 @@ objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
 objp[0,:,:2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
 prev_img_shape = None
 
-calib_image = cv2.imread(params_SLAM.path_calib_img)
+calib_image = cv2.imread(params_Corridor.path_calib_img)
 gray = cv2.cvtColor(calib_image, cv2.COLOR_BGR2GRAY)
 
 ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
@@ -43,8 +43,8 @@ if ret == True:
     pp_px = (cx_px, cy_px)
 
     # Convert "Pixel Unit" to "SI Unit"
-    focal = params_SLAM.sizeSensor * focal_px
-    pp = (params_SLAM.sizeSensor * pp_px[0], params_SLAM.sizeSensor * pp_px[1])
+    focal = params_Corridor.sizeSensor * focal_px
+    pp = (params_Corridor.sizeSensor * pp_px[0], params_Corridor.sizeSensor * pp_px[1])
 
     print("### Calibration Completed ###")
 
@@ -71,10 +71,10 @@ def extract_t_f_coords(t_f):
     It will return t_f_extract
     """
     for i in range(0, len(t_f)):
-        params_SLAM.t_f_new[0][i] = t_f[i][0]
-        params_SLAM.t_f_extract = np.append(params_SLAM.t_f_extract, params_SLAM.t_f_new, axis=0)
+        params_Corridor.t_f_new[0][i] = t_f[i][0]
+        params_Corridor.t_f_extract = np.append(params_Corridor.t_f_extract, params_Corridor.t_f_new, axis=0)
 
-    return params_SLAM.t_f_extract
+    return params_Corridor.t_f_extract
 
 # Visualization Function
 def visualization_orb_coords(list_text, traj):
@@ -82,19 +82,19 @@ def visualization_orb_coords(list_text, traj):
     This function will put texts on trajectory following below conditions
     """
     # Text Title
-    cv2.putText(traj, params_SLAM.text_title, params_SLAM.textOrg_title, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+    cv2.putText(traj, params_Corridor.text_title, params_Corridor.textOrg_title, cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
     for i in range(0, len(list_text)):
         # X, Y and Z Coordinates
-        put_text = params_SLAM.list_text_header[i] + str(round(list_text[i], 8)) + "m"
-        cv2.putText(traj, put_text, params_SLAM.list_text_Org[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
+        put_text = params_Corridor.list_text_header[i] + str(round(list_text[i], 8)) + "m"
+        cv2.putText(traj, put_text, params_Corridor.list_text_Org[i], cv2.FONT_HERSHEY_PLAIN, 1, (255,255,255), 1, 8)
 
 # Saving Result Function
 def save_result(traj):
     # Save mapped image
-    cv2.imwrite(params_SLAM.Result_image_name, traj)
+    cv2.imwrite(params_Corridor.Result_image_name, traj)
     # Save ORB Coordinates for txt file
-    params_SLAM.t_f_extract = params_SLAM.t_f_extract[1:]
-    np.savetxt(params_SLAM.path_result + 't_f_extract_Corridor.txt', params_SLAM.t_f_extract, fmt="%10s", delimiter=',', header='t_f_extract')
+    params_Corridor.t_f_extract = params_Corridor.t_f_extract[1:]
+    np.savetxt(params_Corridor.path_result + 't_f_extract_Corridor.txt', params_Corridor.t_f_extract, fmt="%10s", delimiter=',', header='t_f_extract')
 
 # Calculate total distance of sequence
 def calculate_total_distance_and_error():
@@ -105,25 +105,25 @@ def calculate_total_distance_and_error():
     y_prev = 0
 
     # Calculate
-    for i in range(0, len(params_SLAM.t_f_extract)):
-        x = params_SLAM.t_f_extract[i][0]
-        y = params_SLAM.t_f_extract[i][1]
+    for i in range(0, len(params_Corridor.t_f_extract)):
+        x = params_Corridor.t_f_extract[i][0]
+        y = params_Corridor.t_f_extract[i][1]
         distance += math.sqrt((x-x_prev)**2 + (y-y_prev)**2)
         x_prev = x
         y_prev = y
         i += 1
     
-    error = (params_SLAM.distance_truth - distance) / params_SLAM.distance_truth
+    error = (params_Corridor.distance_truth - distance) / params_Corridor.distance_truth
     error_percent = error * 100
     
-    print("### Distance Truth: ", params_SLAM.distance_truth, "m ###")
+    print("### Distance Truth: ", params_Corridor.distance_truth, "m ###")
     print("### Distance Calculated: ", distance, "m ###")
     print("### Error: ", error_percent, "% ###") 
 
 # Visualize ORB coordinates as 3D-Plot
 def plotting_3D():
     ## Designate paths and load data
-    path_data = params_SLAM.path_result + 't_f_extract_Corridor.txt'
+    path_data = params_Corridor.path_result + 't_f_extract_Corridor.txt'
     data = open(path_data)
     lines = data.readlines()
     ## Plotting
