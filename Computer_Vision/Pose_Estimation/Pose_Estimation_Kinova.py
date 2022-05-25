@@ -6,7 +6,7 @@ print("### Pose_Estimation.py [Stable Version] / 1.0.0 ###")
 
 # Set Environment Path
 cwd = os.getcwd()
-path_results = cwd + '/Potential_CV/Pose_Estimation/Results/'
+path_results = cwd + '/Computer_Vision/Pose_Estimation/Results/'
 
 # Utility Function
 def get_image_size_from_cap(cap:cv2.VideoCapture):
@@ -74,7 +74,9 @@ axis_cube = np.float32([[0,0,0], [0,3,0], [3,3,0], [3,0,0],
 # Set boolean
 isCalibrated = False
 
-cap = cv2.VideoCapture(cv2.CAP_DSHOW)
+rtsp_link = 'rtsp://admin:admin@192.168.1.10/color'
+cap = cv2.VideoCapture(rtsp_link)
+# cap = cv2.VideoCapture(cv2.CAP_DSHOW)
 # cap = cv2.VideoCapture(1)
 
 while cap.isOpened():
@@ -116,36 +118,37 @@ while cap.isOpened():
 
     # Pose Estimation_Axis
     if isCalibrated:
-            corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
-            # Find the rotation and translation vectors
-            _, rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist)
-            # Project 3D points to image lane
-            img_pts, jac = cv2.projectPoints(axis_simple, rvecs, tvecs, mtx, dist)
-            axis_3d = draw_axis_3d(frame, corners2, img_pts)
-            cv2.imshow("Sample_Axis_3D", axis_3d)
+        corners = np.float32(corners)
+        corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+        # Find the rotation and translation vectors
+        _, rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist)
+        # Project 3D points to image lane
+        img_pts, jac = cv2.projectPoints(axis_simple, rvecs, tvecs, mtx, dist)
+        axis_3d = draw_axis_3d(frame, corners2, img_pts)
+        cv2.imshow("Sample_Axis_3D", axis_3d)
 
-            # Apply Rodrigues method
-            rmatrix, _ = cv2.Rodrigues(rvecs)
-            rmatrix = rmatrix.reshape(3, 3)
+        # Apply Rodrigues method
+        rmatrix, _ = cv2.Rodrigues(rvecs)
+        rmatrix = rmatrix.reshape(3, 3)
 
-            # Extract rvecs, tvecs
-            rvecs_header = np.array(['# rvecs'])
-            rvecs_extract = np.append(rvecs_header, rvecs)
-            tvecs_header = np.array(['# tvecs'])
-            tvecs_extract = np.append(tvecs_header, tvecs)
-            Extrinsic_Params_Vecs = np.concatenate((rvecs_extract, tvecs_extract), axis=0)
-            np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_Vecs.txt', Extrinsic_Params_Vecs, fmt="%10s", delimiter=',', header='Extrinsic_Parameters_Vectors')
+        # Extract rvecs, tvecs
+        rvecs_header = np.array(['# rvecs'])
+        rvecs_extract = np.append(rvecs_header, rvecs)
+        tvecs_header = np.array(['# tvecs'])
+        tvecs_extract = np.append(tvecs_header, tvecs)
+        Extrinsic_Params_Vecs = np.concatenate((rvecs_extract, tvecs_extract), axis=0)
+        np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_Vecs.txt', Extrinsic_Params_Vecs, fmt="%10s", delimiter=',', header='Extrinsic_Parameters_Vectors')
 
-            # Extract rmatrix
-            np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_rmatrix.txt', rmatrix, fmt="%10s", delimiter=',', header='Rotation Matrix')
+        # Extract rmatrix
+        np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_rmatrix.txt', rmatrix, fmt="%10s", delimiter=',', header='Rotation Matrix')
 
-            # Homogeneous Transformation
-            Homo_Trans = np.concatenate((rmatrix, tvecs), axis=1)
-            Row_Project = np.array([0, 0, 0, 1])
-            Homo_Trans = np.vstack([Homo_Trans, Row_Project])
-            
-            # Extract Homogeneous Transformation
-            np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_Homo_Trans.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Transformation')
+        # Homogeneous Transformation
+        Homo_Trans = np.concatenate((rmatrix, tvecs), axis=1)
+        Row_Project = np.array([0, 0, 0, 1])
+        Homo_Trans = np.vstack([Homo_Trans, Row_Project])
+        
+        # Extract Homogeneous Transformation
+        np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_Homo_Trans.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Transformation')
 
     # Quit
     elif key == ord('q'):
