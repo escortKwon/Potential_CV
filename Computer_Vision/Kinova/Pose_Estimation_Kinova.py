@@ -112,8 +112,9 @@ if isCalibrated:
     h, w = gray.shape[:2]
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
 
-    test_start = 1
-    test_end = 2
+    test_start = 3
+    test_end = 4
+
     for i in range(test_start, test_end + 1):
         path_test_imgs = path_test + f'{i:02d}.jpg'
         test_img = cv2.imread(path_test_imgs)
