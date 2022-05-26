@@ -7,10 +7,10 @@ print("### Camera_Calibration_2.py [Nightly Version] / Ver.0.0.1 ###")
 # Set environment path
 cwd = os.getcwd()
 path_data = cwd + '/Computer_Vision/Kinova/Data/'
-path_detected_corners = '/Potential_CV/Camera_Calibration/Detected_Corners/Detected_Corners_'
-path_undistortion = '/Potential_CV/Camera_Calibration/Results/'
-
-path_results = cwd + '/Computer_Vision/Pose_Estimation/Results/'
+path_test = cwd + '/Computer_Vision/Kinova/Test/'
+path_detected_corners = '/Computer_Vision/Kinova/Detected_Corners/Detected_Corners_'
+path_undistortion = '/Computer_Vision/Kinova/Results/'
+path_results = cwd + '/Computer_Vision/Kinova/Results/'
 
 # Utility Function
 def get_image_size_from_cap(cap:cv2.VideoCapture):
@@ -74,14 +74,15 @@ axis_cube = np.float32([[0,0,0], [0,3,0], [3,3,0], [3,0,0],
 
 image_size = (1280, 720)
 
+# Set key input
 key = cv2.waitKey(1)
 
 # Set Boolean
-isCalibrated = True
+isCalibrated = False
 
 for i in range(1, 21):
-    path_imgs = path_data + f'{i:02d}.jpg'
-    img = cv2.imread(path_imgs)
+    path_data_imgs = path_data + f'{i:02d}.jpg'
+    img = cv2.imread(path_data_imgs)
     cv2.imshow("src", img)
     key = cv2.waitKey(0)
 
@@ -103,41 +104,44 @@ if isCalibrated:
     h, w = gray.shape[:2]
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
 
-    frame_undistorted = cv2.undistort(img, mtx, dist, None, newcameramtx)
-    x, y, w, h = roi
-    frame_undistorted = frame_undistorted[y:y+h, x:x+w]
-    cv2.imshow("Undistorted Frame", frame_undistorted)
-    key = cv2.waitKey(0)
-    cv2.imwrite(cwd + path_undistortion + "Undistorted_Result.png", frame_undistorted)
+    for i in range(1, 2+1):
+        path_test_imgs = path_test + f'{i:02d}.jpg'
+        test_img = cv2.imread(path_test_imgs)
+        frame_undistorted_test = cv2.undistort(test_img, mtx, dist, None, newcameramtx)
+        x, y, w, h = roi
+        frame_undistorted_test = frame_undistorted_test[y:y+h, x:x+w]
+        cv2.imshow("Undistorted Frame", frame_undistorted_test)
+        key = cv2.waitKey(0)
+        cv2.imwrite(cwd + path_undistortion + f"Undistorted_Result_Test_{i}.png", frame_undistorted_test)
 
-    corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
-    # Find the rotation and translation vectors
-    _, rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist)
-    # Project 3D points to image lane
-    img_pts, jac = cv2.projectPoints(axis_simple, rvecs, tvecs, mtx, dist)
-    axis_3d = draw_axis_3d(img, corners2, img_pts)
-    cv2.imshow("Sample_Axis_3D", axis_3d)
-    key = cv2.waitKey(0)
+        corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+        # Find the rotation and translation vectors
+        _, rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist)
+        # Project 3D points to image lane
+        img_pts, jac = cv2.projectPoints(axis_simple, rvecs, tvecs, mtx, dist)
+        axis_3d = draw_axis_3d(test_img, corners2, img_pts)
+        cv2.imshow("Sample_Axis_3D", axis_3d)
+        key = cv2.waitKey(0)
 
-    # Apply Rodrigues method
-    rmatrix, _ = cv2.Rodrigues(rvecs)
-    rmatrix = rmatrix.reshape(3, 3)
+        # Apply Rodrigues method
+        rmatrix, _ = cv2.Rodrigues(rvecs)
+        rmatrix = rmatrix.reshape(3, 3)
 
-    # Extract rvecs, tvecs
-    rvecs_header = np.array(['# rvecs'])
-    rvecs_extract = np.append(rvecs_header, rvecs)
-    tvecs_header = np.array(['# tvecs'])
-    tvecs_extract = np.append(tvecs_header, tvecs)
-    Extrinsic_Params_Vecs = np.concatenate((rvecs_extract, tvecs_extract), axis=0)
-    np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_Vecs.txt', Extrinsic_Params_Vecs, fmt="%10s", delimiter=',', header='Extrinsic_Parameters_Vectors')
+        # Extract rvecs, tvecs
+        rvecs_header = np.array(['# rvecs'])
+        rvecs_extract = np.append(rvecs_header, rvecs)
+        tvecs_header = np.array(['# tvecs'])
+        tvecs_extract = np.append(tvecs_header, tvecs)
+        Extrinsic_Params_Vecs = np.concatenate((rvecs_extract, tvecs_extract), axis=0)
+        np.savetxt(path_results + f'Pose_Estimation_Extrinsic_Params_Vecs_{i}.txt', Extrinsic_Params_Vecs, fmt="%10s", delimiter=',', header='Extrinsic_Parameters_Vectors')
 
-    # Extract rmatrix
-    np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_rmatrix.txt', rmatrix, fmt="%10s", delimiter=',', header='Rotation Matrix')
+        # Extract rmatrix
+        np.savetxt(path_results + f'Pose_Estimation_Extrinsic_Params_rmatrix_{i}.txt', rmatrix, fmt="%10s", delimiter=',', header='Rotation Matrix')
 
-    # Homogeneous Transformation
-    Homo_Trans = np.concatenate((rmatrix, tvecs), axis=1)
-    Row_Project = np.array([0, 0, 0, 1])
-    Homo_Trans = np.vstack([Homo_Trans, Row_Project])
-    
-    # Extract Homogeneous Transformation
-    np.savetxt(path_results + 'Pose_Estimation_Extrinsic_Params_Homo_Trans.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Transformation')
+        # Homogeneous Transformation
+        Homo_Trans = np.concatenate((rmatrix, tvecs), axis=1)
+        Row_Project = np.array([0, 0, 0, 1])
+        Homo_Trans = np.vstack([Homo_Trans, Row_Project])
+        
+        # Extract Homogeneous Transformation
+        np.savetxt(path_results + f'Pose_Estimation_Extrinsic_Params_Kinova_{i}.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Transformation')
