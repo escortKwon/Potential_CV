@@ -124,15 +124,19 @@ if isCalibrated:
         key = cv2.waitKey(0)
         cv2.imwrite(path_results + f"Undistorted_Result_Test_{i}.png", frame_undistorted_test)
 
+        ret, corners = cv2.findChessboardCorners(frame_undistorted_test_gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
         test_corners2 = cv2.cornerSubPix(frame_undistorted_test_gray, corners, (11,11), (-1,-1), criteria)
+        test_corners2_squeeze = np.squeeze(test_corners2)
+        np.savetxt(path_results + f'Pose_Estimation_Corners_{i}.txt', test_corners2_squeeze, fmt="%10s", delimiter=',', header='Corners')
+
         # Find the rotation and translation vectors
         _, rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, test_corners2, mtx, dist)
         # Extract data
         extract_data(rvecs, tvecs)
         # Project 3D points to image lane
         img_pts, jac = cv2.projectPoints(axis_simple, rvecs, tvecs, mtx, dist)
-        cv2.drawChessboardCorners(test_img, CHECKERBOARD, test_corners2, ret)
-        cv2.imshow("Undistorted_Test_Chessboard", test_img)
-        # axis_3d = draw_axis_3d(frame_undistorted_test, corners2, img_pts)
-        # cv2.imshow("Results", axis_3d)
+        cv2.drawChessboardCorners(frame_undistorted_test, CHECKERBOARD, test_corners2, ret)
+        axis_3d = draw_axis_3d(frame_undistorted_test, test_corners2, img_pts)
+        cv2.imshow("Results", axis_3d)
         key = cv2.waitKey(0)
+        print(">>> All Process Completed")
