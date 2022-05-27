@@ -13,6 +13,23 @@ path_data = cwd + '/Computer_Vision/Kinova/Data/'
 path_test = cwd + '/Computer_Vision/Kinova/Test/'
 path_results = cwd + '/Computer_Vision/Kinova/Results/'
 
+# Boundary condition
+CHECKERBOARD = (6, 8) # 체커보드 행과 열당 내부 코너 수
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+# Calculate euclidean distance
+def calculate_euclidean_distance(corners):
+    initial_distance = np.sqrt((corners[0][0] - 0)**2 + (corners[0][1] - 0)**2)
+
+    for i in range(1, CHECKERBOARD[0]*CHECKERBOARD[1]):
+        distance_new = np.sqrt((corners[i][0] - 0)**2 + (corners[i][1] - 0)**2)
+        if distance_new < initial_distance:
+            corners_min = (corners[i][0], corners[i][1])
+        else:
+            pass
+
+    return corners_min
+
 # Draw Function
 def draw_axis_3d(img, corners, img_pts):
     """
@@ -20,7 +37,8 @@ def draw_axis_3d(img, corners, img_pts):
 
     cv2.findChessboardCorners()
     """
-    corner = tuple(corners[0].ravel().astype(np.int64))
+    # corner = tuple(corners[0].ravel().astype(np.int64))
+    corner = calculate_euclidean_distance(corners)
     img = cv2.line(img, corner, tuple(img_pts[0].ravel().astype(np.int64)), (255,0,0), 5)
     img = cv2.line(img, corner, tuple(img_pts[1].ravel().astype(np.int64)), (0,255,0), 5)
     img = cv2.line(img, corner, tuple(img_pts[2].ravel().astype(np.int64)), (0,0,255), 5)
@@ -51,10 +69,6 @@ def extract_data(rvecs, tvecs):
     np.savetxt(path_results + f'Pose_Estimation_Kinova_HomoMatrix_{i}.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Matrix')
 
     return 0
-
-# Boundary condition
-CHECKERBOARD = (6, 8) # 체커보드 행과 열당 내부 코너 수
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 # Points list
 obj_corner_points = []
@@ -127,6 +141,7 @@ if isCalibrated:
         ret, corners = cv2.findChessboardCorners(frame_undistorted_test_gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
         test_corners2 = cv2.cornerSubPix(frame_undistorted_test_gray, corners, (11,11), (-1,-1), criteria)
         test_corners2_squeeze = np.squeeze(test_corners2)
+        print(calculate_euclidean_distance(test_corners2_squeeze))
         np.savetxt(path_results + f'Pose_Estimation_Corners_{i}.txt', test_corners2_squeeze, fmt="%10s", delimiter=',', header='Corners')
 
         # Find the rotation and translation vectors
