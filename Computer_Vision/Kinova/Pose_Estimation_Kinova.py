@@ -24,9 +24,8 @@ def calculate_euclidean_distance(corners):
     for i in range(1, CHECKERBOARD[0]*CHECKERBOARD[1]):
         distance_new = np.sqrt((corners[i][0] - 0)**2 + (corners[i][1] - 0)**2)
         if distance_new < initial_distance:
-            corners_min = (corners[i][0], corners[i][1])
-        else:
-            pass
+            corners_min = (corners[i][0].astype(np.uint64), corners[i][1].astype(np.uint64))
+            initial_distance = distance_new
 
     return corners_min
 
@@ -151,7 +150,7 @@ if isCalibrated:
         # Project 3D points to image lane
         img_pts, jac = cv2.projectPoints(axis_simple, rvecs, tvecs, mtx, dist)
         cv2.drawChessboardCorners(frame_undistorted_test, CHECKERBOARD, test_corners2, ret)
-        axis_3d = draw_axis_3d(frame_undistorted_test, test_corners2, img_pts)
+        axis_3d = draw_axis_3d(frame_undistorted_test, test_corners2_squeeze, img_pts)
         cv2.imshow("Results", axis_3d)
         key = cv2.waitKey(0)
         print(">>> All Process Completed")
