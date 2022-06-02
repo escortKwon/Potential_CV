@@ -9,8 +9,8 @@ print("### Pose_Estimation_Kinova.py [Beta Version] / Ver.0.1.1 ###")
 
 # Set environment path
 cwd = os.getcwd()
-path_data = cwd + '/Computer_Vision/Kinova/Data/'
-path_test = cwd + '/Computer_Vision/Kinova/Test/'
+path_data = cwd + '/Computer_Vision/Kinova/Data/SB/'
+path_test = cwd + '/Computer_Vision/Kinova/Test/SB/'
 path_results = cwd + '/Computer_Vision/Kinova/Results/'
 
 # Boundary condition
@@ -54,18 +54,18 @@ def extract_data(rvecs, tvecs):
     tvecs_header = np.array(['# tvecs'])
     tvecs_extract = np.append(tvecs_header, tvecs)
     Extrinsic_Params_Vecs = np.concatenate((rvecs_extract, tvecs_extract), axis=0)
-    np.savetxt(path_results + f'Pose_Estimation_Kinova_Vecs_{i}.txt', Extrinsic_Params_Vecs, fmt="%10s", delimiter=',', header='Vectors')
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_Vecs_SB_{i}.txt', Extrinsic_Params_Vecs, fmt="%10s", delimiter=',', header='Vectors')
 
     # Convert to Rotation matrix
     rmatrix, _ = cv2.Rodrigues(rvecs)
     rmatrix = rmatrix.reshape(3, 3)
-    np.savetxt(path_results + f'Pose_Estimation_Kinova_rmatrix_{i}.txt', rmatrix, fmt="%10s", delimiter=',', header='Rotation Matrix')
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_rmatrix_SB_{i}.txt', rmatrix, fmt="%10s", delimiter=',', header='Rotation Matrix')
 
     # Convert to Homogeneous Matrix
     Homo_Trans = np.concatenate((rmatrix, tvecs), axis=1)
     Row_Project = np.array([0, 0, 0, 1])
     Homo_Trans = np.vstack([Homo_Trans, Row_Project])
-    np.savetxt(path_results + f'Pose_Estimation_Kinova_HomoMatrix_{i}.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Matrix')
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_HomoMatrix_SB_{i}.txt', Homo_Trans, fmt="%10s", delimiter=',', header='Homogeneous Matrix')
 
     return 0
 
@@ -105,7 +105,7 @@ for i in range(data_start, data_end + 1):
     key = cv2.waitKey(0)
 
     gray = cv2.cvtColor(data_img, cv2.COLOR_BGR2GRAY)
-    ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
+    ret, corners = cv2.findChessboardCornersSB(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
 
     if ret == True:
         obj_corner_points.append(objp)
@@ -125,8 +125,8 @@ if isCalibrated:
     h, w = gray.shape[:2]
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
 
-    test_start = 5
-    test_end = 6
+    test_start = 1
+    test_end = 2
 
     for i in range(test_start, test_end + 1):
         path_test_imgs = path_test + f'{i:02d}.jpg'
@@ -135,13 +135,13 @@ if isCalibrated:
         frame_undistorted_test_gray = cv2.cvtColor(frame_undistorted_test, cv2.COLOR_BGR2GRAY)
         cv2.imshow("Undistorted Frame", frame_undistorted_test)
         key = cv2.waitKey(0)
-        cv2.imwrite(path_results + f"Undistorted_Result_Test_{i}.png", frame_undistorted_test)
+        cv2.imwrite(path_results + f"Undistorted_Result_Test_SB_{i}.png", frame_undistorted_test)
 
-        ret, corners = cv2.findChessboardCorners(frame_undistorted_test_gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
+        ret, corners = cv2.findChessboardCornersSB(frame_undistorted_test_gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
         test_corners2 = cv2.cornerSubPix(frame_undistorted_test_gray, corners, (11,11), (-1,-1), criteria)
         test_corners2_squeeze = np.squeeze(test_corners2)
         print(calculate_euclidean_distance(test_corners2_squeeze))
-        np.savetxt(path_results + f'Pose_Estimation_Corners_{i}.txt', test_corners2_squeeze, fmt="%10s", delimiter=',', header='Corners')
+        np.savetxt(path_results + f'Pose_Estimation_Corners_SB_{i}.txt', test_corners2_squeeze, fmt="%10s", delimiter=',', header='Corners')
 
         # Find the rotation and translation vectors
         _, rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, test_corners2, mtx, dist)
