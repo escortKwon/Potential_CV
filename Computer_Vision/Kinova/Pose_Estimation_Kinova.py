@@ -121,7 +121,11 @@ for i in range(data_start, data_end + 1):
         print(">>> Press any key to Continue... ")
     
 if isCalibrated:
-    ret, mtx, dist, rves, tvecs = cv2.calibrateCamera(obj_corner_points, img_corner_points, image_size, None, None)
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj_corner_points, img_corner_points, image_size, None, None)
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_Distortion_SB_{i}.txt', dist, fmt="%10s", delimiter=',', header='Distortion Coefficients')
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_CameraMatrix_SB_{i}.txt', mtx, fmt="%10s", delimiter=',', header='Camera Matrix')
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_rvecs_SB_{i}.txt', np.squeeze(rvecs), fmt="%10s", delimiter=',', header='Rotation Vectors')
+    np.savetxt(path_results + f'Pose_Estimation_Kinova_tvecs_SB_{i}.txt', np.squeeze(tvecs), fmt="%10s", delimiter=',', header='Translation Vectors')
     h, w = gray.shape[:2]
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
 
